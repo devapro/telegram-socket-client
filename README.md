@@ -37,11 +37,21 @@ socket.emit("tg_send_message", {
 ### `tg_fetch_messages`
 Fetches the last messages from a specific channel.
 
-**Payload**: `string` (Channel URL or Username, e.g., `https://t.me/telegram`)
+**Payload**: `FetchMessagesPayload`
+
+```typescript
+interface FetchMessagesPayload {
+    channel: string; // Channel URL or Username
+    limit: number;   // Number of messages to fetch
+}
+```
 
 **Example**:
 ```javascript
-socket.emit("tg_fetch_messages", "https://t.me/telegram");
+socket.emit("tg_fetch_messages", {
+    channel: "https://t.me/telegram",
+    limit: 10
+});
 ```
 
 ## Server -> Client Events
@@ -55,6 +65,7 @@ Emitted when a new message is received after subscribing.
 interface ChannelMessageModel {
     id: number;
     text: string;
+    date: number;
     isPrivate: boolean;
     channelId: string | undefined; // BigInt serialized as string (if applicable) or undefined
 }

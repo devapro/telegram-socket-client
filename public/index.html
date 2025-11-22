@@ -367,7 +367,10 @@
 
         function fillFetchMessages() {
             eventNameInput.value = 'tg_fetch_messages';
-            eventDataInput.value = 'https://t.me/telegram';
+            eventDataInput.value = JSON.stringify({
+                channel: 'https://t.me/telegram',
+                limit: 10
+            }, null, 2);
         }
     </script>
 </body>

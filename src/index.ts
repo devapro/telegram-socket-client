@@ -31,10 +31,10 @@ async function main() {
             }
         });
 
-        socket.on("tg_fetch_messages", async (channel: string) => {
-            console.log("user fetch messages", channel);
+        socket.on("tg_fetch_messages", async (payload: { channel: string; limit: number }) => {
+            console.log("user fetch messages", payload);
             try {
-                await fetchChannelMessages(tgClient, channel, async (message: ChannelMessageModel) => {
+                await fetchChannelMessages(tgClient, payload.channel, payload.limit, async (message: ChannelMessageModel) => {
                     io.emit("tg_fetch_messages", message);
                 });
             } catch (error) {

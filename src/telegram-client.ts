@@ -43,6 +43,7 @@ export async function startTelegramClient(): Promise<TelegramClient> {
 export type ChannelMessageModel = {
     id: number;
     text: string;
+    date: number;
     isPrivate: boolean;
     channelId: bigInt.BigInteger | undefined;
 };
@@ -82,6 +83,7 @@ export async function subscribeToUpdates(
             onMessage({
                 id: message.message.id,
                 text: message.message.text,
+                date: message.message.date,
                 isPrivate: message.isPrivate === true,
                 channelId: message.message.peerId.channelId,
             });
@@ -93,6 +95,7 @@ export async function subscribeToUpdates(
             onMessage({
                 id: message.message.id,
                 text: message.message.text,
+                date: message.message.date,
                 isPrivate: message.isPrivate === true,
                 channelId: message.message.peerId.chatId,
             });
@@ -123,14 +126,18 @@ export async function fetchChannelInfo(
 export async function fetchChannelMessages(
     client: TelegramClient,
     channel: string,
+    limit: number,
     onMessage: (message: ChannelMessageModel) => Promise<void>,
 ): Promise<void> {
-    const messages = await client.getMessages(channel);
+    const messages = await client.getMessages(channel, {
+        limit: limit,
+    });
     const channelInfo = await fetchChannelInfo(client, channel);
     for (const message of messages) {
         onMessage({
             id: message.id,
             text: message.text,
+            date: message.date,
             isPrivate: message.isPrivate === true,
             channelId: channelInfo.id
         });
