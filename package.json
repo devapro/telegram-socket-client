@@ -1,0 +1,25 @@
+{
+  "name": "tg-rest-api",
+  "version": "1.0.0",
+  "description": "Telegram client with rest API",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "run": "tsx src/index.ts",
+    "fmt": "prettier --write src"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/node": "^22.15.18",
+    "prettier": "^3.5.3",
+    "tsx": "^4.19.4"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1",
+    "telegram": "^2.26.22"
+  }
+}

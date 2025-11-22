@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket API Tester</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #334155;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        h1,
+        h2 {
+            margin-top: 0;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .log-container {
+            height: 600px;
+            overflow-y: auto;
+            background-color: #000;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+            border: 1px solid var(--border);
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.5rem;
+            word-break: break-all;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: var(--text-secondary);
+            margin-right: 0.5rem;
+        }
+
+        .log-type-sent {
+            color: var(--accent);
+        }
+
+        .log-type-received {
+            color: var(--success);
+        }
+
+        .log-type-error {
+            color: var(--error);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--error);
+            margin-right: 0.5rem;
+        }
+
+        .status-connected {
+            background-color: var(--success);
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header-row">
+                <h1>Socket Tester</h1>
+                <div class="connection-status">
+                    <span id="status-dot" class="status-indicator"></span>
+                    <span id="status-text">Disconnected</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="event-name">Event Name</label>
+                <input type="text" id="event-name" placeholder="e.g., tg_channel_subscribe" list="event-suggestions">
+                <datalist id="event-suggestions">
+                    <option value="tg_subscribe_to_updates">
+                    <option value="tg_send_message">
+                    <option value="tg_fetch_messages">
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label for="event-data">Event Data (JSON or String)</label>
+                <textarea id="event-data"
+                    placeholder='e.g., "https://t.me/channel" or {"recipient": "...", "message": "..."}'></textarea>
+            </div>
+
+            <button id="send-btn">Send Event</button>
+
+            <div style="margin-top: 2rem;">
+                <h2>Quick Actions</h2>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button onclick="fillSubscribe()"
+                        style="width: auto; background-color: var(--card-bg); border: 1px solid var(--border);">Subscribe
+                        Template</button>
+                    <button onclick="fillMessage()"
+                        style="width: auto; background-color: var(--card-bg); border: 1px solid var(--border);">Send Msg
+                        Template</button>
+                    <button onclick="fillFetchMessages()"
+                        style="width: auto; background-color: var(--card-bg); border: 1px solid var(--border);">Fetch
+                        Msgs
+                        Template</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Event Log</h2>
+            <div id="log-container" class="log-container"></div>
+            <button onclick="clearLog()"
+                style="margin-top: 1rem; background-color: var(--card-bg); border: 1px solid var(--border);">Clear
+                Log</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const logContainer = document.getElementById('log-container');
+        const eventNameInput = document.getElementById('event-name');
+        const eventDataInput = document.getElementById('event-data');
+        const sendBtn = document.getElementById('send-btn');
+
+        // Connection handling
+        socket.on('connect', () => {
+            statusDot.classList.add('status-connected');
+            statusText.textContent = 'Connected';
+            addLog('System', 'Connected to server', 'received');
+        });
+
+        socket.on('disconnect', () => {
+            statusDot.classList.remove('status-connected');
+            statusText.textContent = 'Disconnected';
+            addLog('System', 'Disconnected from server', 'error');
+        });
+
+        // Listen for server events
+        const serverEvents = [
+            'tg_subscribe_to_updates',
+            'tg_send_message',
+            'tg_send_message_error',
+            'tg_fetch_messages',
+            'tg_fetch_messages_error'
+        ];
+
+        serverEvents.forEach(event => {
+            socket.on(event, (data) => {
+                const type = event.endsWith('_error') ? 'error' : 'received';
+                addLog(event, data, type);
+            });
+        });
+
+        // Send event
+        sendBtn.addEventListener('click', () => {
+            const eventName = eventNameInput.value.trim();
+            const eventDataStr = eventDataInput.value.trim();
+
+            if (!eventName) {
+                alert('Please enter an event name');
+                return;
+            }
+
+            let eventData;
+            try {
+                // Try parsing as JSON, if it fails, treat as string if it looks like a string
+                // or just send raw if it's a simple string
+                if (eventDataStr.startsWith('{') || eventDataStr.startsWith('[')) {
+                    eventData = JSON.parse(eventDataStr);
+                } else if (eventDataStr.startsWith('"') && eventDataStr.endsWith('"')) {
+                    eventData = JSON.parse(eventDataStr);
+                } else {
+                    eventData = eventDataStr;
+                }
+            } catch (e) {
+                // If JSON parse fails, send as string
+                eventData = eventDataStr;
+            }
+
+            // If eventData is empty string (and not intended to be empty string), send undefined if appropriate?
+            // Socket.io handles undefined/null fine. But for fetch messages we need a string.
+            // For subscribe we need nothing.
+
+            if (eventDataStr === "") {
+                socket.emit(eventName);
+                addLog(eventName, undefined, 'sent');
+            } else {
+                socket.emit(eventName, eventData);
+                addLog(eventName, eventData, 'sent');
+            }
+        });
+
+        function addLog(event, data, type) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+
+            const time = new Date().toLocaleTimeString();
+            const typeClass = `log-type-${type}`;
+
+            let dataDisplay = data;
+            if (typeof data === 'object') {
+                dataDisplay = JSON.stringify(data, null, 2);
+            } else if (data === undefined) {
+                dataDisplay = 'undefined';
+            }
+
+            entry.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="${typeClass}"><strong>${event}</strong></span>
+                <pre style="margin: 0.5rem 0 0 0; color: #ccc;">${dataDisplay}</pre>
+            `;
+
+            logContainer.insertBefore(entry, logContainer.firstChild);
+        }
+
+        function clearLog() {
+            logContainer.innerHTML = '';
+        }
+
+        function fillSubscribe() {
+            eventNameInput.value = 'tg_subscribe_to_updates';
+            eventDataInput.value = '';
+        }
+
+        function fillMessage() {
+            eventNameInput.value = 'tg_send_message';
+            eventDataInput.value = JSON.stringify({
+                recipient: '@username',
+                message: 'Hello World'
+            }, null, 2);
+        }
+
+        function fillFetchMessages() {
+            eventNameInput.value = 'tg_fetch_messages';
+            eventDataInput.value = 'https://t.me/telegram';
+        }
+    </script>
+</body>
+
+</html>
