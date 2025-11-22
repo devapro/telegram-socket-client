@@ -207,6 +207,7 @@
                 <label for="event-name">Event Name</label>
                 <input type="text" id="event-name" placeholder="e.g., tg_channel_subscribe" list="event-suggestions">
                 <datalist id="event-suggestions">
+                    <option value="tg_connect">
                     <option value="tg_subscribe_to_updates">
                     <option value="tg_send_message">
                     <option value="tg_fetch_messages">
@@ -224,6 +225,9 @@
             <div style="margin-top: 2rem;">
                 <h2>Quick Actions</h2>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button onclick="fillConnect()"
+                        style="width: auto; background-color: var(--card-bg); border: 1px solid var(--border);">Connect
+                        Template</button>
                     <button onclick="fillSubscribe()"
                         style="width: auto; background-color: var(--card-bg); border: 1px solid var(--border);">Subscribe
                         Template</button>
@@ -272,6 +276,8 @@
 
         // Listen for server events
         const serverEvents = [
+            'tg_connect_success',
+            'tg_connect_error',
             'tg_subscribe_to_updates',
             'tg_send_message',
             'tg_send_message_error',
@@ -350,6 +356,15 @@
 
         function clearLog() {
             logContainer.innerHTML = '';
+        }
+
+        function fillConnect() {
+            eventNameInput.value = 'tg_connect';
+            eventDataInput.value = JSON.stringify({
+                apiId: "YOUR_API_ID",
+                apiHash: "YOUR_API_HASH",
+                sessionString: "YOUR_SESSION_STRING"
+            }, null, 2);
         }
 
         function fillSubscribe() {

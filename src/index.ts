@@ -19,10 +19,9 @@ type TgParams = {
 }
 
 async function main() {
-    let tgClient: TelegramClient | null = null;
-
     io.on("connection", async (socket) => {
         console.log("a user connected");
+        let tgClient: TelegramClient | null = null;
 
         socket.on("tg_connect", async (message: TgParams) => {
             console.log("user connected");
@@ -44,7 +43,7 @@ async function main() {
                 return;
             }
             subscribeToUpdates(tgClient, async (message: ChannelMessageModel) => {
-                io.emit("tg_subscribe_to_updates", message);
+                socket.emit("tg_subscribe_to_updates", message);
             });
         });
 
@@ -56,10 +55,10 @@ async function main() {
             }
             try {
                 await sendMessage(tgClient, message);
-                io.emit("tg_send_message", message);
+                socket.emit("tg_send_message", message);
             } catch (error) {
                 console.error("Error sending message", error);
-                io.emit("tg_send_message_error", error);
+                socket.emit("tg_send_message_error", error);
             }
         });
 
@@ -71,11 +70,19 @@ async function main() {
             }
             try {
                 await fetchChannelMessages(tgClient, payload.channel, payload.limit, async (message: ChannelMessageModel) => {
-                    io.emit("tg_fetch_messages", message);
+                    socket.emit("tg_fetch_messages", message);
                 });
             } catch (error) {
                 console.error("Error fetching messages", error);
-                io.emit("tg_fetch_messages_error", error);
+                socket.emit("tg_fetch_messages_error", error);
+            }
+        });
+
+        socket.on("disconnect", async () => {
+            console.log("user disconnected");
+            if (tgClient) {
+                await tgClient.disconnect();
+                tgClient = null;
             }
         });
     });

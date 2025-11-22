@@ -4,8 +4,30 @@ This document describes the Socket.IO events and data structures used in the app
 
 ## Client -> Server Events
 
+### `tg_connect`
+Initializes the Telegram client for the current socket connection. This must be called before any other Telegram-related events.
+
+**Payload**: `TgParams`
+
+```typescript
+interface TgParams {
+    apiId: string;
+    apiHash: string;
+    sessionString: string;
+}
+```
+
+**Example**:
+```javascript
+socket.emit("tg_connect", {
+    apiId: "123456",
+    apiHash: "your_api_hash",
+    sessionString: "your_session_string"
+});
+```
+
 ### `tg_subscribe_to_updates`
-Subscribes the client to listen for incoming Telegram messages.
+Subscribes the client to listen for incoming Telegram messages. Requires a successful `tg_connect` first.
 
 **Payload**: `void` (No payload required)
 
@@ -55,6 +77,16 @@ socket.emit("tg_fetch_messages", {
 ```
 
 ## Server -> Client Events
+
+### `tg_connect_success`
+Emitted when the Telegram client is successfully initialized and connected.
+
+**Payload**: `void`
+
+### `tg_connect_error`
+Emitted when the Telegram client fails to initialize.
+
+**Payload**: `string` (Error message)
 
 ### `tg_subscribe_to_updates`
 Emitted when a new message is received after subscribing.

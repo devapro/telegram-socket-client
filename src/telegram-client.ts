@@ -1,10 +1,7 @@
 import { Api, TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
 import readline from 'readline';
-import dotenv from 'dotenv';
 import { NewMessage, type NewMessageEvent } from 'telegram/events';
-
-dotenv.config();
 
 export async function startTelegramClient(
     apiId: number,
