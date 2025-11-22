@@ -1,20 +1,48 @@
 import express from 'express';
 import { createServer } from 'node:http';
 import { Server } from "socket.io";
+import dotenv from 'dotenv';
 import { fetchChannelMessages, sendMessage, startTelegramClient, subscribeToUpdates, type ChannelMessageModel, type OutgoingMessage } from './telegram-client';
+import type { TelegramClient } from 'telegram';
+
+dotenv.config();
 
 const app = express();
 app.use(express.static('public'));
 const server = createServer(app);
 const io = new Server(server);
 
-async function main() {
-    const tgClient = await startTelegramClient()
+type TgParams = {
+    apiId: string,
+    apiHash: string,
+    sessionString: string
+}
 
-    io.on("connection", (socket) => {
+async function main() {
+    let tgClient: TelegramClient | null = null;
+
+    io.on("connection", async (socket) => {
         console.log("a user connected");
 
-        socket.on("tg_subscribe_to_updates", () => {
+        socket.on("tg_connect", async (message: TgParams) => {
+            console.log("user connected");
+            let apiId = parseInt(message.apiId) || parseInt(process.env.TELEGRAM_API_ID || '');
+            let apiHash = message.apiHash || process.env.TELEGRAM_API_HASH || '';
+            let sessionString = message.sessionString || process.env.TELEGRAM_SESSION || '';
+            if (apiId === -1 || apiHash === '' || sessionString === '') {
+                console.log("user connect, but tgClient is not initialized");
+                socket.emit("tg_connect_error", "Invalid parameters");
+                return;
+            }
+            tgClient = await startTelegramClient(apiId, apiHash, sessionString);
+            socket.emit("tg_connect_success");
+        });
+
+        socket.on("tg_subscribe_to_updates", async () => {
+            if (!tgClient) {
+                console.log("user subscribe to updates, but tgClient is not initialized");
+                return;
+            }
             subscribeToUpdates(tgClient, async (message: ChannelMessageModel) => {
                 io.emit("tg_subscribe_to_updates", message);
             });
@@ -22,6 +50,10 @@ async function main() {
 
         socket.on("tg_send_message", async (message: OutgoingMessage) => {
             console.log("user send message", message);
+            if (!tgClient) {
+                console.log("user send message, but tgClient is not initialized");
+                return;
+            }
             try {
                 await sendMessage(tgClient, message);
                 io.emit("tg_send_message", message);
@@ -33,6 +65,10 @@ async function main() {
 
         socket.on("tg_fetch_messages", async (payload: { channel: string; limit: number }) => {
             console.log("user fetch messages", payload);
+            if (!tgClient) {
+                console.log("user fetch messages, but tgClient is not initialized");
+                return;
+            }
             try {
                 await fetchChannelMessages(tgClient, payload.channel, payload.limit, async (message: ChannelMessageModel) => {
                     io.emit("tg_fetch_messages", message);

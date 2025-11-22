@@ -6,11 +6,11 @@ import { NewMessage, type NewMessageEvent } from 'telegram/events';
 
 dotenv.config();
 
-export async function startTelegramClient(): Promise<TelegramClient> {
-    const apiId = parseInt(process.env.TELEGRAM_API_ID || '');
-    const apiHash = process.env.TELEGRAM_API_HASH || '';
-    const sessionString = process.env.TELEGRAM_SESSION || '';
-
+export async function startTelegramClient(
+    apiId: number,
+    apiHash: string,
+    sessionString: string
+): Promise<TelegramClient> {
     const stringSession = new StringSession(sessionString);
 
     const rl = readline.createInterface({
