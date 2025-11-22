@@ -22,6 +22,7 @@ async function main() {
     io.on("connection", async (socket) => {
         console.log("a user connected");
         let tgClient: TelegramClient | null = null;
+        let isSubscribed = false;
 
         socket.on("tg_connect", async (message: TgParams) => {
             console.log("user connected");
@@ -33,7 +34,11 @@ async function main() {
                 socket.emit("tg_connect_error", "Invalid parameters");
                 return;
             }
+            if (tgClient) {
+                await tgClient.disconnect();
+            }
             tgClient = await startTelegramClient(apiId, apiHash, sessionString);
+            isSubscribed = false;
             socket.emit("tg_connect_success");
         });
 
@@ -42,9 +47,14 @@ async function main() {
                 console.log("user subscribe to updates, but tgClient is not initialized");
                 return;
             }
+            if (isSubscribed) {
+                console.log("user already subscribed to updates");
+                return;
+            }
             subscribeToUpdates(tgClient, async (message: ChannelMessageModel) => {
                 socket.emit("tg_subscribe_to_updates", message);
             });
+            isSubscribed = true;
         });
 
         socket.on("tg_send_message", async (message: OutgoingMessage) => {
@@ -87,8 +97,9 @@ async function main() {
         });
     });
 
-    server.listen(3000, () => {
-        console.log('server running at http://localhost:3000');
+    const port = process.env.PORT || 3000;
+    server.listen(port, () => {
+        console.log(`server running at http://localhost:${port}`);
     });
 }
 

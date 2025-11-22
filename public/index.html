@@ -127,6 +127,7 @@
         .log-container {
             height: 600px;
             overflow-y: auto;
+            overflow-x: hidden;
             background-color: #000;
             border-radius: 0.5rem;
             padding: 1rem;
@@ -348,7 +349,7 @@
             entry.innerHTML = `
                 <span class="log-time">[${time}]</span>
                 <span class="${typeClass}"><strong>${event}</strong></span>
-                <pre style="margin: 0.5rem 0 0 0; color: #ccc;">${dataDisplay}</pre>
+                <pre style="margin: 0.5rem 0 0 0; color: #ccc; white-space: pre-wrap; word-wrap: break-word;">${dataDisplay}</pre>
             `;
 
             logContainer.insertBefore(entry, logContainer.firstChild);

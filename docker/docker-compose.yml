@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  tg-rest-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../.env
+    volumes:
+      - ../src:/app/src
+      - ../public:/app/public
+    restart: unless-stopped

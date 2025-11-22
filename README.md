@@ -1,6 +1,25 @@
-# Socket API Contract
+# Telegram client with Socket.IO
 
-This document describes the Socket.IO events and data structures used in the application.
+Can be used as integration layer between Telegram and any other application.
+
+Test page:
+
+![Test page](image.png)
+
+
+## Running with Docker
+
+1. Navigate to the `docker` directory:
+   ```bash
+   cd docker
+   ```
+
+2. Run the application using Docker Compose:
+   ```bash
+   docker-compose up --build
+   ```
+
+The application will be available at `http://localhost:3000`.
 
 ## Client -> Server Events
 
@@ -71,7 +90,7 @@ interface FetchMessagesPayload {
 **Example**:
 ```javascript
 socket.emit("tg_fetch_messages", {
-    channel: "https://t.me/telegram",
+    channel: "telegram",
     limit: 10
 });
 ```
