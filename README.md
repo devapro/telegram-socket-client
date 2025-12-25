@@ -119,6 +119,18 @@ socket.emit("tg_fetch_messages", {
 
 ### Server → Client Events
 
+#### `tg_connect_success`
+Emitted immediately when a client connects to Socket.IO. Indicates that the server's Telegram client is connected and ready to use.
+
+**Payload**: `void`
+
+**Example**:
+```javascript
+socket.on("tg_connect_success", () => {
+    console.log("Telegram is ready!");
+});
+```
+
 #### `tg_update`
 Broadcast to **all connected clients** when a new Telegram message is received. This happens automatically - no subscription needed.
 
@@ -210,6 +222,11 @@ const socket = io("http://localhost:3000");
 // Listen for connection
 socket.on("connect", () => {
     console.log("Connected to server");
+});
+
+// Telegram is ready
+socket.on("tg_connect_success", () => {
+    console.log("Telegram client is connected and ready!");
 });
 
 // Listen for incoming Telegram messages (automatic broadcast)

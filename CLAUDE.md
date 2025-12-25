@@ -62,6 +62,7 @@ The application runs on port 3000 by default (configurable via PORT env var).
 - `tg_fetch_messages` - Get message history from channel
 
 **Server → Client:**
+- `tg_connect_success` - Emitted when client connects (confirms Telegram is ready)
 - `tg_update` - New message received (broadcast to all clients)
 - `tg_send_message` / `tg_send_message_error` - Send result
 - `tg_fetch_messages` / `tg_fetch_messages_error` - Message history (streaming)
