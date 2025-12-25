@@ -36,8 +36,10 @@ async function main() {
     io.on("connection", async (socket) => {
         console.log("a user connected");
 
-        // Notify client that Telegram is connected and ready
-        socket.emit("tg_connect_success");
+        socket.on("tg_connect", () => {
+            console.log("user checking tg connection");
+            socket.emit("tg_connect_success");
+        });
 
         socket.on("tg_send_message", async (message: OutgoingMessage) => {
             console.log("user send message", message);
