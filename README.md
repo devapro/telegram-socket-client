@@ -10,6 +10,7 @@ Test page:
 
 - **Automatic Connection**: Telegram client connects automatically when the server starts
 - **Real-time Updates**: All connected clients receive Telegram messages via broadcast
+- **Dual API**: Both Socket.IO (real-time) and REST API (HTTP) interfaces
 - **Message Sending**: Send messages to users and channels
 - **Message History**: Fetch message history from channels
 
@@ -206,14 +207,109 @@ socket.on("tg_fetch_messages_error", (error) => {
 
 ---
 
+## REST API
+
+The server also provides a REST API for integration scenarios where real-time WebSocket connections are not required.
+
+### Endpoints
+
+#### `POST /api/messages`
+Sends a message to a recipient (user or channel).
+
+**Request Body**: `OutgoingMessage`
+
+```json
+{
+    "recipient": "@username",
+    "message": "Hello from REST API!"
+}
+```
+
+**Response** (success):
+```json
+{
+    "success": true,
+    "message": "Message sent successfully",
+    "data": {
+        "recipient": "@username",
+        "message": "Hello from REST API!"
+    }
+}
+```
+
+**Response** (error):
+```json
+{
+    "error": "Failed to send message",
+    "details": "Error details here"
+}
+```
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/api/messages \
+  -H "Content-Type: application/json" \
+  -d '{"recipient": "@username", "message": "Hello!"}'
+```
+
+---
+
+#### `GET /api/messages/:channel`
+Fetches message history from a specific channel.
+
+**URL Parameters**:
+- `channel` (required): Channel username or identifier (e.g., "telegram")
+
+**Query Parameters**:
+- `limit` (optional): Number of messages to fetch (default: 100)
+
+**Response** (success):
+```json
+{
+    "success": true,
+    "count": 10,
+    "data": [
+        {
+            "id": 12345,
+            "text": "Message text",
+            "date": 1640000000,
+            "isPrivate": false,
+            "channelId": "1234567890"
+        }
+    ]
+}
+```
+
+**Response** (error):
+```json
+{
+    "error": "Failed to fetch messages",
+    "details": "Error details here"
+}
+```
+
+**Example**:
+```bash
+# Fetch last 10 messages
+curl http://localhost:3000/api/messages/telegram?limit=10
+
+# Fetch last 100 messages (default)
+curl http://localhost:3000/api/messages/telegram
+```
+
+---
+
 ## Architecture
 
-- **Single Shared Client**: The server maintains one Telegram client connection shared across all Socket.IO connections
-- **Automatic Broadcasting**: All connected clients automatically receive Telegram updates via `tg_update` events
-- **No Manual Connection**: Clients don't need to authenticate or connect - just connect to Socket.IO and start using the API
+- **Single Shared Client**: The server maintains one Telegram client connection shared across both Socket.IO and REST API interfaces
+- **Automatic Broadcasting**: All connected Socket.IO clients automatically receive Telegram updates via `tg_update` events
+- **Dual Interface**: Choose Socket.IO for real-time updates or REST API for simple HTTP requests
+- **No Manual Connection**: Clients don't need to authenticate - the server handles the Telegram connection
 - **Persistent Connection**: The Telegram connection persists for the lifetime of the server process
 
 ## Example Usage
+
+### Socket.IO (Real-time)
 
 ```javascript
 // Connect to Socket.IO
@@ -265,4 +361,37 @@ socket.on("tg_fetch_messages", (message) => {
 socket.on("tg_fetch_messages_error", (error) => {
     console.error("Fetch failed:", error);
 });
+```
+
+### REST API (HTTP)
+
+```javascript
+// Send a message
+const sendResponse = await fetch("http://localhost:3000/api/messages", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        recipient: "@username",
+        message: "Hello from REST API!"
+    })
+});
+const sendResult = await sendResponse.json();
+console.log(sendResult);
+
+// Fetch channel messages
+const messagesResponse = await fetch("http://localhost:3000/api/messages/telegram?limit=10");
+const messagesResult = await messagesResponse.json();
+console.log(`Fetched ${messagesResult.count} messages:`, messagesResult.data);
+```
+
+```bash
+# Using curl to send a message
+curl -X POST http://localhost:3000/api/messages \
+  -H "Content-Type: application/json" \
+  -d '{"recipient": "@username", "message": "Hello!"}'
+
+# Using curl to fetch messages
+curl http://localhost:3000/api/messages/telegram?limit=10
 ```

@@ -9,6 +9,7 @@ dotenv.config();
 
 const app = express();
 app.use(express.static('public'));
+app.use(express.json());
 const server = createServer(app);
 const io = new Server(server);
 
@@ -24,7 +25,7 @@ async function main() {
     }
 
     console.log('Initializing Telegram client...');
-    const tgClient = await startTelegramClient(apiId, apiHash, sessionString);
+    const tgClient: TelegramClient = await startTelegramClient(apiId, apiHash, sessionString);
     console.log('Telegram client connected successfully');
 
     // Subscribe to updates and broadcast to all connected clients
@@ -32,6 +33,62 @@ async function main() {
         io.emit("tg_update", message);
     });
     console.log('Subscribed to Telegram updates');
+
+    // REST API endpoints
+    app.post('/api/messages', async (req, res) => {
+        try {
+            const message: OutgoingMessage = req.body;
+
+            if (!message.recipient || !message.message) {
+                return res.status(400).json({
+                    error: 'Missing required fields: recipient and message'
+                });
+            }
+
+            await sendMessage(tgClient, message);
+            res.json({
+                success: true,
+                message: 'Message sent successfully',
+                data: message
+            });
+        } catch (error) {
+            console.error('Error sending message via REST API', error);
+            res.status(500).json({
+                error: 'Failed to send message',
+                details: error instanceof Error ? error.message : String(error)
+            });
+        }
+    });
+
+    app.get('/api/messages/:channel', async (req, res) => {
+        try {
+            const { channel } = req.params;
+            const limit = parseInt(req.query.limit as string) || 100;
+
+            if (!channel) {
+                return res.status(400).json({
+                    error: 'Missing required parameter: channel'
+                });
+            }
+
+            const messages: ChannelMessageModel[] = [];
+            await fetchChannelMessages(tgClient, channel, limit, async (message: ChannelMessageModel) => {
+                messages.push(message);
+            });
+
+            res.json({
+                success: true,
+                count: messages.length,
+                data: messages
+            });
+        } catch (error) {
+            console.error('Error fetching messages via REST API', error);
+            res.status(500).json({
+                error: 'Failed to fetch messages',
+                details: error instanceof Error ? error.message : String(error)
+            });
+        }
+    });
 
     io.on("connection", async (socket) => {
         console.log("a user connected");
